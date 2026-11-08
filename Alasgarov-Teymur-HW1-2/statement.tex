@@ -1,0 +1,199 @@
+% =====================================================================
+%  DLE-AI-202 DEEP LEARNING, HOMEWORK 1 (STATEMENT), Weeks 1-2, PyTorch
+%  Render:  tectonic statement.tex   (needs academy_assignment.sty + logos alongside)
+% =====================================================================
+\documentclass[11pt,a4paper]{article}
+\usepackage{academy_assignment}
+\usepackage{amsmath}
+
+\lstset{
+  morekeywords={self,None,True,False,torch,nn},
+  emph={[1]Tensor,Module,Linear,Dropout,ReLU,MLP,Optimizer,DataLoader},
+  emphstyle={[1]\color{AccentInk}\bfseries},
+}
+
+\SetDocKind{Homework 1}
+\SetCourseCode{DLE-AI-202}
+\SetCourseTitle{Deep Learning}
+\SetCourseSubtitle{Neural-Network Foundations in PyTorch (Weeks 1--2)}
+\SetHeaderLeft{DLE-AI-202 \textperiodcentered\ Homework 1}
+\SetReleased{Sun 1 Nov 2026}
+\SetDue{Sun 15 Nov 2026, 23:59 Baku}
+\SetPoints{100}
+\SetWeight{2.5\% of grade (HW1 to HW4 = 10\%)}
+\SetSubmit{\texttt{.zip} on Moodle (\S\ref{sec:submit})}
+
+\begin{document}
+\academytitle
+\assignmentmeta
+
+\section{Overview and learning objective}
+\textbf{Build, check and train a neural network with PyTorch, and understand every line.} This homework tests course objective \textbf{DL1}: turn the
+mathematics of Weeks~1--2 into a working model that \emph{learns}, and diagnose it when it does not. Week~1 gives the model, its maximum-likelihood
+loss, activations and initialisation; Week~2 gives backpropagation, optimisers and regularisation. You will use PyTorch's tensors and \texttt{nn.Module},
+but you will also write the pieces that frameworks usually hide (stable losses, a manual backward pass, a training loop), so that nothing is a black box.
+
+\begin{itemize}
+  \item \textbf{Part A: Written (30 pts).} Eight short problems: the equations your code implements, one full backward pass by hand, and debugging reasoning.
+  \item \textbf{Part B: Code (45 pts).} Complete the stubs in \texttt{src/} until the provided \texttt{pytest} checks pass: tensor basics and losses (B1), manual
+        backpropagation and a custom autograd \texttt{Function} (B2), an \texttt{MLP} module with initialisation (B3), training utilities (B4), diagnostics with hooks (B5).
+  \item \textbf{Part E: Experiments (15 pts).} Four short experiments in the notebook: depth and initialisation, optimisers, regularisation on noisy data,
+        and a final model with test accuracy $\ge0.95$.
+  \item \textbf{Part C: Reflection (10 pts).} Three prompts about \emph{your own} code and results, and your AI-tool disclosure.
+  \item \textbf{Bonus (+10).} \texttt{MyAdam} as a \texttt{torch.optim.Optimizer} (+6) and MixUp (+4). The total is capped at 100.
+\end{itemize}
+
+\noindent\textbf{Estimated effort:} 10--12 hours over two weeks. After Week~1: A1--A5, B1, B3, B5 and experiment E1. After Week~2: A6--A8, B2, B4, E2--E4.
+
+\begin{infobox}[title={What you start from (the homework kit)}]
+\texttt{hw1\_notebook.ipynb} (the notebook you work in), \texttt{torch\_cheatsheet.ipynb} (a runnable PyTorch reference: tensors, autograd, \texttt{nn.Module}, losses,
+optimisers, schedulers, data loaders, a complete training loop, diagnostics, common errors), \texttt{src/} (stubs and provided helpers), \texttt{tests/} (the checks),
+\texttt{report\_template.tex}, \texttt{pledge.txt}, \texttt{requirements.txt}, \texttt{README.md}. The dataset (scikit-learn digits, $8\times8$ images, 10 classes) is built in:
+there is nothing to download and everything runs on a CPU in minutes.
+\end{infobox}
+
+\begin{infobox}[title={What you submit (one zip)}]
+\textbf{(1)} \texttt{report.pdf}: the filled-in report template (all written answers). \textbf{(2)} your code: \texttt{src/} and the notebook \texttt{hw1\_notebook.ipynb} \emph{with outputs}.
+\textbf{(3)} \texttt{figures/final\_curves.png} (made by the notebook) and a signed \texttt{pledge.txt}. Details in \S\ref{sec:submit}.
+\end{infobox}
+
+\section{How this homework is marked}
+Per the course syllabus, homework is \textbf{marked for a complete, good-faith attempt}, not for correct answers, and every set comes back with written feedback.
+\emph{Full credit:} every problem attempted, with the working and the code shown. \emph{Half credit:} a substantial attempt with problems missing.
+\emph{No credit:} missing, token or copied work. The point values below show where the effort goes and what the feedback will comment on. The \texttt{pytest} checks are \textbf{your own feedback}:
+they tell you whether your code is right, so use them. \emph{Homework is where you are allowed to be wrong; the quizzes and the exams are where correctness counts}, and
+they ask the same kind of questions.
+
+\section{Part A: Written (30 pts)}
+Show every step. Typeset the maths, or embed a clean scan of handwritten work in the report template. A bare final number earns no feedback; the reasoning is what we read.
+
+\begin{problem}[3 pts]{Shapes and parameter count}
+An MLP has layers $20\to64\to32\to5$ with ReLU hidden units. A batch of $128$ examples goes through it. (a)~Give the shape of $W^{(\ell)}$ and $\mathbf b^{(\ell)}$ as stored by
+\texttt{nn.Linear}, and of $\mathbf z^{(\ell)}$ and $\mathbf a^{(\ell)}$ for the batch, for every layer. (b)~Count the parameters. (c)~Count the multiply--add operations of one forward pass for \emph{one} example.
+\end{problem}
+
+\begin{problem}[4 pts]{Losses come from likelihood}
+(a)~Assume $y=\hat y+\epsilon$, $\epsilon\sim\mathcal N(0,\sigma^2)$. Derive the negative log-likelihood of one example and show that minimising it over the data is minimising the mean squared error.
+(b)~For a logit $z$, $\hat y=\sigma(z)$ and label $y\in\{0,1\}$, show that
+$-[y\log\hat y+(1-y)\log(1-\hat y)]=\max(z,0)-zy+\log\!\big(1+e^{-|z|}\big)$ (the stable form you code in B1), and say why this form never overflows.
+(c)~Show that $\partial L/\partial z=\hat y-y$.
+\end{problem}
+
+\begin{problem}[6 pts]{Backpropagation by hand}
+A $2\to2\to2$ network: ReLU hidden layer, linear output, softmax and cross-entropy. With
+\[
+W^{(1)}=\begin{pmatrix}1&-1\\2&0\end{pmatrix},\ \mathbf b^{(1)}=\begin{pmatrix}0\\-1\end{pmatrix},\
+W^{(2)}=\begin{pmatrix}1&1\\-1&2\end{pmatrix},\ \mathbf b^{(2)}=\mathbf 0,\
+\mathbf x=\begin{pmatrix}1\\2\end{pmatrix},\ \mathbf y=(1,0),
+\]
+and $\mathbf z^{(1)}=W^{(1)}\mathbf x+\mathbf b^{(1)}$, $\mathbf h=\operatorname{ReLU}(\mathbf z^{(1)})$, $\mathbf z^{(2)}=W^{(2)}\mathbf h+\mathbf b^{(2)}$:
+\begin{parts}
+  \item Compute $\mathbf z^{(1)},\mathbf h,\mathbf z^{(2)},\mathbf p=\operatorname{softmax}(\mathbf z^{(2)})$ and $L$. \hfill [1]
+  \item Draw the computational graph, then derive and evaluate $\boldsymbol\delta^{(2)}=\partial L/\partial\mathbf z^{(2)}$, $\partial L/\partial W^{(2)}$ and $\partial L/\partial\mathbf b^{(2)}$. Name the chain-rule factors \emph{before} multiplying. \hfill [2]
+  \item Continue one layer down: $\boldsymbol\delta^{(1)}$ (mind the ReLU gate), $\partial L/\partial W^{(1)}$, $\partial L/\partial\mathbf b^{(1)}$. \hfill [2]
+  \item Which hidden unit receives \emph{no} gradient for this example, and why? What would happen if that were true for \emph{every} example (the dying-ReLU problem)? \hfill [1]
+\end{parts}
+Check your numbers with the notebook cell in B2 only \emph{after} you have written them.
+\end{problem}
+
+\begin{problem}[4 pts]{Activations and vanishing gradients}
+(a)~Show $\sigma'(z)=\sigma(z)(1-\sigma(z))$ and find its maximum. (b)~Ignoring the weights, the gradient reaching layer 1 of an $L$-layer sigmoid network is at most $0.25^{L}$ times the gradient at the output.
+How many layers make this smaller than $10^{-6}$? (c)~Derive the derivative of Swish, $f(z)=z\sigma(z)$ (you code it in B2), and of GELU, $f(z)=z\Phi(z)$, in terms of $\Phi$ and the standard normal density $\varphi$.
+\end{problem}
+
+\begin{problem}[4 pts]{Initialisation}
+(a)~A unit computes $z=\sum_{j=1}^{n}w_ja_j$ with independent, zero-mean $w_j$ and $a_j$. Show $\operatorname{Var}(z)=n\operatorname{Var}(w)\,\mathbb E[a^2]$, and use $\mathbb E[a^2]=\tfrac12\operatorname{Var}(z_{\rm prev})$ for ReLU to derive $\operatorname{Var}(w)=2/n$ (He).
+(b)~Give the He and the Xavier standard deviation for a $784\to256$ layer. (c)~Why can a network not be initialised with all weights equal to zero? (d)~What loss do you expect from a freshly initialised 10-class network and why? Which two bugs make it much larger?
+\end{problem}
+
+\begin{problem}[4 pts]{Optimisers}
+Minimise $f(w)=5w^2$ from $w_0=1$ with learning rate $\eta=0.05$. (a)~Do two steps of plain SGD and two steps of momentum ($v\leftarrow\gamma v+\eta g$, $w\leftarrow w-v$, $\gamma=0.9$, $v_0=0$). What do you notice about the momentum iterates?
+(b)~Write Adam's first update for a gradient $g_1=0.2$ with learning rate $\eta$, including the bias correction, and say how large the step is. (c)~Why is weight decay applied \emph{outside} the adaptive scaling in AdamW?
+\end{problem}
+
+\begin{problem}[3 pts]{Regularisation}
+(a)~Show that SGD on $L(\mathbf w)+\frac\lambda2\|\mathbf w\|^2$ equals shrinking the weights by $(1-\eta\lambda)$ and then taking the usual gradient step. (b)~With inverted dropout (drop with probability $p$, scale kept units by $1/(1-p)$), show $\mathbb E[a']=a$.
+(c)~Why must batch normalisation use different statistics at training and inference time?
+\end{problem}
+
+\begin{problem}[2 pts]{Debugging}
+For each symptom give the most likely cause and the \emph{first check} you would run. (i)~10-class loss stays at $2.30$ and never moves. (ii)~Loss becomes \texttt{NaN} after 50 steps. (iii)~Training accuracy 99\%, validation accuracy 70\%. (iv)~Validation accuracy differs every time you evaluate the same model on the same data.
+\end{problem}
+
+\section{Part B: Code (45 pts)}\label{sec:code}
+Work in \texttt{src/}. Each module has a docstring that specifies exactly what to implement; the tests in \texttt{tests/} compare with PyTorch's own functions or with finite differences.
+Run them from the project root with \texttt{pytest}, or from the notebook cells provided. \emph{Run the tests early and often.}
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}p{2.9cm}X r@{}}
+\toprule
+\textbf{Part} & \textbf{File} & \textbf{What you implement} & \textbf{Pts}\\
+\midrule
+B1 & \texttt{tensor\_basics.py} & \texttt{standardize}, \texttt{one\_hot}, \texttt{pairwise\_sq\_dists} (no loops), stable \texttt{softmax}, \texttt{log\_softmax}, \texttt{cross\_entropy}, \texttt{bce\_with\_logits}, \texttt{mse} from raw tensor operations & 10\\
+B2 & \texttt{manual\_mlp.py} & forward, \emph{manual} backward of a 2-layer MLP (the backpropagation equations of Week 2), finite-difference \texttt{numerical\_grad}, \texttt{SwishFn} as an \texttt{autograd.Function} & 10\\
+B3 & \texttt{model.py} & \texttt{MLP(nn.Module)} with activation, dropout, batch/layer norm; \texttt{init\_weights} (He, Xavier, normal, zeros) from the variance formulas; \texttt{count\_params} & 8\\
+B4 & \texttt{train.py} & \texttt{warmup\_cosine}, \texttt{train\_one\_epoch}, \texttt{evaluate}, \texttt{fit} with early stopping and best-weights restore & 12\\
+B5 & \texttt{diagnostics.py} & forward-hook \texttt{layer\_stats}, \texttt{dead\_relu\_fraction}, \texttt{overfit\_one\_batch} & 5\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{notebox}
+\textbf{Rules for B1 and B2.} Inside your own functions use tensor operations (indexing, broadcasting, matmul, \texttt{exp}, \texttt{log}, \texttt{logsumexp}). Do not call \texttt{F.cross\_entropy}, \texttt{torch.softmax}, \texttt{F.one\_hot}
+and similar \emph{inside the answers}: the tests use them as the reference. In B2 do not call \texttt{.backward()} in \texttt{backward}; that is the point. From B3 on, use PyTorch freely, but keep \texttt{self.net} (an \texttt{nn.Sequential}) and the
+function signatures: the tests and the diagnostics rely on them.
+\end{notebox}
+
+\begin{notebox}
+\textbf{Speed tip.} Tiny networks run fastest on \emph{one} CPU thread; with many threads PyTorch can be a hundred times slower. The kit sets one thread for you (\texttt{DL\_HW\_THREADS=N} to change it). The cheatsheet shows a measurement.
+\end{notebox}
+
+\section{Part E: Experiments (15 pts)}
+In the notebook, using your own code from Part~B and the seed derived from your Academy ID (\texttt{STUDENT\_ID}). Each experiment ends with a short written answer (3--5 sentences, your own words, citing \emph{your} numbers); copy these into the report.
+\begin{enumerate}
+  \item \textbf{E1 (4 pts) Depth and initialisation.} A 10-layer MLP built four ways (sigmoid+Xavier, ReLU+tiny normal, ReLU+Xavier, ReLU+He). Measure per-layer output std and gradient norm at initialisation with \texttt{layer\_stats}, then train with SGD. Explain which configurations fail and why.
+  \item \textbf{E2 (3 pts) Optimisers.} SGD, SGD+momentum, RMSprop, Adam and AdamW on the same model, data and seed. Compare validation-loss curves; say what differs and why one learning rate cannot rank optimisers.
+  \item \textbf{E3 (4 pts) Regularisation.} 300 training images with 25\% corrupted labels so that overfitting is visible. Compare baseline, dropout, batch norm, weight decay, early stopping and a combination in a table and a plot; say what each mechanism does.
+  \item \textbf{E4 (4 pts) Final model.} Choose a configuration \emph{using the validation set only}, train with warm-up + cosine and gradient clipping, and evaluate on the test set \emph{once}. Target: test accuracy $\ge0.95$. Save \texttt{figures/final\_curves.png}.
+\end{enumerate}
+
+\section{Part C: Reflection (10 pts)}
+Answer in the report (3--5 sentences each), referring to \emph{your own} code and numbers. These rehearse the short oral verification of homework that begins in Week~7: \emph{work you cannot explain is not your work.}
+\begin{enumerate}
+  \item \textbf{[4 pts]} Trace one weight's gradient through your \texttt{manual\_mlp.backward}, line by line, and say where the activation derivative enters.
+  \item \textbf{[3 pts]} Which two lines of your training or evaluation code would silently break things if removed (e.g.\ \texttt{zero\_grad}, \texttt{model.eval()}, \texttt{no\_grad})? What exactly goes wrong?
+  \item \textbf{[3 pts]} One result in Part~E that surprised you or differed from the lecture, and your explanation. Then your \textbf{AI-tool disclosure}.
+\end{enumerate}
+
+\section{Bonus: optional (up to +10)}
+Total capped at 100. In \texttt{src/bonus.py}: \textbf{[+6]} \texttt{MyAdam}, Adam with bias correction as a \texttt{torch.optim.Optimizer} subclass matching \texttt{torch.optim.Adam} to $10^{-6}$ (\texttt{tests/test\_bonus.py});
+\textbf{[+4]} \texttt{mixup\_batch}, then train with it in the E3 setting and add a row to the table. A bonus that breaks the core tests will not be counted.
+
+\section{Submission}\label{sec:submit}
+One archive on Moodle named \texttt{HW1\_<STUDENT\_ID>.zip} containing:
+\begin{enumerate}
+  \item \texttt{report.pdf}, the compiled \texttt{report\_template.tex}, with all written answers (Parts A, E, C);
+  \item \texttt{src/} (your completed code) and \texttt{hw1\_notebook.ipynb} \textbf{with all outputs saved} (run \emph{Restart \& Run All} before saving);
+  \item \texttt{figures/final\_curves.png} and the signed \texttt{pledge.txt}.
+\end{enumerate}
+We run \texttt{pytest} on your \texttt{src/} and read your notebook. Do not submit data files or the cheatsheet.
+
+\begin{policybox}
+{\headingfont\bfseries\color{Indigo}Deadline, late work, appeals\par}\smallskip
+Due \textbf{Sunday 15 November 2026, 23:59 Baku time} (two weeks after release), on Moodle. Late submissions and extensions follow the course policy: see \emph{Course Policies}, \emph{Homework, labs, and late submissions}
+in the syllabus (extensions must be requested \emph{before} the deadline). Grading queries and appeals follow \emph{Grades, feedback, and appeals}.
+\end{policybox}
+
+\begin{notebox}
+{\headingfont\bfseries\color{Indigo}Integrity and AI tools\par}\smallskip
+Your submission must be your own work and reflect your own understanding. Per \emph{Course Policies}, \emph{Academic integrity and the use of AI tools}: AI assistants are welcome for learning and debugging,
+but you must be able to explain and reproduce everything you submit without them, and you note where one was used (Part~C3 and \texttt{pledge.txt}). From Week~7 a random sample of homework is verified in a short oral conversation.
+\end{notebox}
+
+\begin{notebox}
+\textbf{Tip.} Run the B1 test first, then B3 and B5, and do E1 as soon as they pass: it makes the Week-1 theory visible. Do the \emph{by hand} problems A3 before using the check cell. When a result looks wrong,
+follow the debugging order of the cheatsheet: shapes and dtypes, initial loss $\approx\ln K$, overfit one batch, learning rate, gradient statistics, \texttt{train()}/\texttt{eval()}, and only then change the model.
+\end{notebox}
+
+\end{document}
