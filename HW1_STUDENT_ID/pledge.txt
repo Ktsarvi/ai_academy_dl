@@ -1,0 +1,5 @@
+I, [Your Name], affirm that the work in this submission is my own. I have not shared or received code, plots, or written analysis for this assignment. Where I used AI assistants, I did so only as permitted by the AI/LLM policy in the course syllabus, and I have declared that use in my report (Part C3). I can explain every line of code and every paragraph of writing in my submission.
+
+AI-tool usage: [e.g. "Used an LLM to explain the error message of a shape mismatch; otherwise no AI tools used." OR "No AI tools used."]
+
+Signed: __________________________     Date: ______________

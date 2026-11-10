@@ -1,0 +1,73 @@
+% =====================================================================
+%  DLE-AI-202 HOMEWORK 1 REPORT (STUDENT TEMPLATE), Weeks 1-2, PyTorch
+%  Fill in, compile (tectonic report_template.tex), submit the PDF as report.pdf.
+% =====================================================================
+\documentclass[11pt,a4paper]{article}
+\usepackage{academy_assignment}
+\usepackage{amsmath}
+
+\SetDocKind{Homework 1 --- Report}
+\SetCourseCode{DLE-AI-202}
+\SetCourseTitle{Deep Learning}
+\SetCourseSubtitle{Neural-Network Foundations in PyTorch \textperiodcentered\ Weeks 1--2}
+\SetHeaderLeft{DLE-AI-202 \textperiodcentered\ HW1 Report}
+
+\begin{document}
+\academytitle
+
+\begin{notebox}
+\setlength{\extrarowheight}{2pt}%
+\begin{tabularx}{\linewidth}{@{}>{\bfseries\color{Indigo}}p{2.9cm} X >{\bfseries\color{Indigo}}p{3.1cm} X@{}}
+  Alasgarov Teymur & Student ID & \hint{as on Moodle (this seeds your run)} \\
+  M201 / group & Date & \hint{submission date} \\
+  Hours spent & \hint{honest estimate} & Submitted with & \texttt{src/}, \texttt{hw1\_notebook.ipynb}, \texttt{figures/} \\
+\end{tabularx}
+\end{notebox}
+
+\section{Part A: written problems}
+\hint{One box per problem. Typeset the maths or embed a clean scan with \texttt{\textbackslash includegraphics}. Resize a box with its \texttt{[...\textbackslash baselineskip]} argument.}
+
+\subsection*{A1 Shapes and parameter count \hfill [3]}
+\begin{respond}[10\baselineskip]\hint{(a) shapes per layer, (b) parameters, (c) multiply--adds per example}\end{respond}
+\subsection*{A2 Losses come from likelihood \hfill [4]}
+\begin{respond}[14\baselineskip]\hint{(a) Gaussian NLL $\to$ MSE; (b) the stable BCE identity and why it cannot overflow; (c) $\partial L/\partial z=\hat y-y$}\end{respond}
+\subsection*{A3 Backpropagation by hand \hfill [6]}
+\begin{respond}[24\baselineskip]\hint{(a) forward values; (b) graph and $\boldsymbol\delta^{(2)},\partial L/\partial W^{(2)},\partial L/\partial\mathbf b^{(2)}$ with factors named first; (c) $\boldsymbol\delta^{(1)}$ through the ReLU gate, $\partial L/\partial W^{(1)}$; (d) the unit with no gradient and the dying-ReLU consequence}\end{respond}
+\subsection*{A4 Activations and vanishing gradients \hfill [4]}
+\begin{respond}[14\baselineskip]\hint{(a) $\sigma'$ and its maximum; (b) number of layers for $0.25^L<10^{-6}$; (c) Swish and GELU derivatives}\end{respond}
+\subsection*{A5 Initialisation \hfill [4]}
+\begin{respond}[16\baselineskip]\hint{(a) variance derivation for He; (b) the two standard deviations for $784\to256$; (c) why not zeros; (d) expected initial loss and two bugs that inflate it}\end{respond}
+\subsection*{A6 Optimisers \hfill [4]}
+\begin{respond}[14\baselineskip]\hint{(a) two SGD and two momentum steps and your observation; (b) Adam's first update with bias correction and its size; (c) decoupled weight decay}\end{respond}
+\subsection*{A7 Regularisation \hfill [3]}
+\begin{respond}[11\baselineskip]\hint{(a) weight decay $=(1-\eta\lambda)$ shrinkage; (b) $\mathbb E[a']=a$ for inverted dropout; (c) batch norm train versus inference}\end{respond}
+\subsection*{A8 Debugging \hfill [2]}
+\begin{respond}[11\baselineskip]\hint{(i)--(iv): most likely cause and first check}\end{respond}
+
+\section{Part B: code status}
+\hint{Paste the last line of \texttt{pytest} (for example ``34 passed''), and note anything that does not pass and what you think is wrong.}
+\begin{respond}[6\baselineskip]\end{respond}
+
+\section{Part E: experiments}
+\hint{Embed \texttt{figures/final\_curves.png} in E4. Cite your own numbers.}
+\subsection*{E1 Depth and initialisation \hfill [4]}
+\begin{respond}[10\baselineskip]\end{respond}
+\subsection*{E2 Optimisers \hfill [3]}
+\begin{respond}[10\baselineskip]\end{respond}
+\subsection*{E3 Regularisation \hfill [4]}
+\begin{respond}[13\baselineskip]\hint{include your results table (configuration, train acc, val loss min/last, test acc)}\end{respond}
+\subsection*{E4 Final model \hfill [4]}
+\begin{respond}[14\baselineskip]\hint{configuration and why (validation numbers), final test accuracy (evaluated once), where the errors are}\end{respond}
+
+\section{Part C: reflection and disclosure}
+\subsection*{C1 Trace a gradient \hfill [4]}
+\begin{respond}[10\baselineskip]\end{respond}
+\subsection*{C2 Lines that must not be removed \hfill [3]}
+\begin{respond}[8\baselineskip]\end{respond}
+\subsection*{C3 Surprise, and AI-tool disclosure \hfill [3]}
+\begin{respond}[10\baselineskip]\hint{Which tool, for what? If none: ``No AI tools used.''}\end{respond}
+
+\section*{Optional bonus}
+\begin{respond}[6\baselineskip]\hint{MyAdam / MixUp: what you did and what you observed}\end{respond}
+
+\end{document}
