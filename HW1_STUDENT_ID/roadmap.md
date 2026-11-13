@@ -12,11 +12,11 @@
 
 | Component | Target Points | Current Status | Primary Artifact / Source |
 | :--- | :---: | :---: | :--- |
-| **Part A: Written Problems** | 30 / 30 | 🟡 **Drafted** | Solutions ready in [`part_a_solutions.md`](./part_a_solutions.md) |
+| **Part A: Written Problems** | 30 / 30 | 🟢 **Ready for Report** | Solutions ready in [`part_a_solutions.md`](./part_a_solutions.md) |
 | **Part B: Code Implementation** | 45 / 45 | 🟢 **100% Complete** | Modules in `src/` passing **36/36 tests** |
-| **Part E: Notebook Experiments** | 15 / 15 | ⚪ **Pending Run** | Code cells in [`hw1_notebook.ipynb`](./hw1_notebook.ipynb) |
-| **Part C: Reflection & Disclosure** | 10 / 10 | 🟡 **70% Drafted** | C1 & C2 ready in [`part_c_solutions.md`](./part_c_solutions.md) |
-| **Bonus Tasks (Adam & MixUp)** | (+10) / 10 | 🟡 **80% Complete** | Code done in [`src/bonus.py`](./src/bonus.py), need E3 run |
+| **Part E: Notebook Experiments** | 15 / 15 | 🟢 **Experiments Run** | Metrics & analysis documented in [`part_e_solutions.md`](./part_e_solutions.md) |
+| **Part C: Reflection & Disclosure** | 10 / 10 | 🟢 **100% Complete** | C1, C2 & C3 ready in [`part_c_solutions.md`](./part_c_solutions.md) |
+| **Bonus Tasks (Adam & MixUp)** | (+10) / 10 | 🟢 **100% Complete** | Code in [`src/bonus.py`](./src/bonus.py) & MixUp row completed in E3 |
 | **Total Base Points** | **100 / 100** | — | — |
 
 ---
@@ -62,25 +62,18 @@
 ### [Part E] Notebook Experiments (15 pts)
 *File to run:* [`hw1_notebook.ipynb`](./hw1_notebook.ipynb) (Seed set from student ID).
 
-- [ ] **E1: Depth and Initialisation (4 pts)**
-  - Build 10-layer MLP four ways: Sigmoid+Xavier, ReLU+tiny normal, ReLU+Xavier, ReLU+He.
-  - Measure per-layer pre-activation std and weight gradient norm via `layer_stats`.
-  - Train 5 epochs with SGD; observe failure modes (vanishing gradient vs. variance explosion).
-  - Draft 3–5 sentence analysis for report citing exact numbers.
-- [ ] **E2: Optimisers on Same Problem (3 pts)**
-  - Compare SGD, SGD+Momentum, RMSprop, Adam, AdamW on identical model and seed.
-  - Plot and compare validation-loss curves.
-  - Explain why Adam converges faster and why a single fixed learning rate cannot fair-rank optimisers.
-- [ ] **E3: Regularisation on Noisy Dataset (4 pts)**
-  - 300 training images from digits dataset with 25% randomly corrupted labels.
-  - Benchmark: Baseline, Dropout ($p=0.3$), BatchNorm, Weight Decay ($\lambda=10^{-3}$), Early Stopping, and Combination.
-  - Add optional **MixUp** bonus row (+4 pts).
-  - Summarize results in comparison table and write 3–5 sentence mechanism explanation.
-- [ ] **E4: Final Model (4 pts)**
-  - Tune hyper-parameters using validation set only (target: Test Accuracy $\ge 0.95$).
-  - Train with Warmup + Cosine scheduler and gradient clipping (`clip_norm=1.0`).
-  - Single final evaluation on test set.
-  - Automatically generate and save [`figures/final_curves.png`](./figures/final_curves.png).
+- [x] **E1: Depth and Initialisation (4 pts)**
+  - Measured per-layer gradient ratio: `sigmoid+xavier` ($1.05\times 10^{-6}$), `relu+normal` ($1.32$), `relu+xavier` ($1.73$), `relu+he` ($0.941$).
+  - Explanations written and ready for report.
+- [x] **E2: Optimisers on Same Problem (3 pts)**
+  - Measured 30-epoch validation accuracy: SGD ($0.947$), SGD+mom ($0.963$), RMSprop ($0.973$), Adam ($0.963$), AdamW ($0.960$).
+  - Convergence speed & learning rate sensitivity explained.
+- [x] **E3: Regularisation on Noisy Dataset (4 pts)**
+  - Evaluated on 300 images with 25% label corruption across Baseline, Dropout, BatchNorm, Weight Decay, Early Stopping, and Combo.
+  - MixUp bonus row included. Summary table and analysis drafted.
+- [x] **E4: Final Model (4 pts)**
+  - Best model reached **0.9799 (98.0%) test accuracy** (test loss 0.1066, best epoch 34). Target $\ge 0.95$ exceeded.
+  - Error confusion analysis and report text drafted.
 
 ---
 
@@ -89,15 +82,15 @@
   - Detailed line-by-line derivation of $W^{(1)}_{j,k}$ in `manual_mlp.backward` and activation derivative entry point. Drafted in `part_c_solutions.md`.
 - [x] **C2: Silent Failure Lines (3 pts)**
   - Concrete breakdown of why removing `optimizer.zero_grad(set_to_none=True)` and `model.eval()` silently corrupts model training. Drafted in `part_c_solutions.md`.
-- [ ] **C3: Experimental Surprise & AI Disclosure (3 pts)**
-  - Note one unexpected experimental finding from Part E.
-  - Add formal AI assistant disclosure statement.
+- [x] **C3: Experimental Surprise & AI Disclosure (3 pts)**
+  - Analysis of BatchNorm failure under label noise vs. combination regulariser in E3, plus sigmoid vanishing gradients in E1.
+  - Formal AI assistant disclosure statement included.
 
 ---
 
 ### [Bonus] Optional Tasks (up to +10 pts)
 - [x] **MyAdam (+6 pts)**: Custom `torch.optim.Optimizer` implemented and verified against standard PyTorch Adam.
-- [ ] **MixUp in E3 (+4 pts)**: Train with `mixup_batch` in the corrupted label experiment and record accuracy in the E3 table.
+- [x] **MixUp in E3 (+4 pts)**: Trained with `mixup_batch` in the corrupted label experiment (train acc 0.380, test acc 0.757) and added to E3 table.
 - [ ] *Action Required:* Write 2–3 sentences in `report_template.tex` summarizing bonus findings.
 
 ---
