@@ -1,7 +1,8 @@
 # Part E: Experiments & Empirical Analysis
+
 **Course**: DLE-AI-202 Deep Learning  
 **Author**: Alasgarov Teymur  
-**File**: `part_e_solutions.md`  
+**File**: `part_e_solutions.md`
 
 This document contains detailed write-ups and ready-to-copy LaTeX blocks for **E1–E4** based on the experimental results obtained in [`hw1_notebook.ipynb`](./hw1_notebook.ipynb).
 
@@ -10,17 +11,20 @@ This document contains detailed write-ups and ready-to-copy LaTeX blocks for **E
 ## E1: Depth and Initialisation (4 pts)
 
 ### Prompt
+
 > A 10-layer MLP built four ways (sigmoid+Xavier, ReLU+tiny normal, ReLU+Xavier, ReLU+He). Measure per-layer output std and gradient norm at initialisation with `layer_stats`, then train with SGD. Explain which configurations fail and why. (3–5 sentences, citing your numbers).
 
 ### Your Experimental Results
-| Configuration | Gradient Ratio ($\text{grad}_{\text{layer1}} / \text{grad}_{\text{last}}$) | Final Validation Accuracy |
-| :--- | :---: | :---: |
-| `sigmoid + xavier` | $1.05 \times 10^{-6}$ | 0.107 (random guessing) |
-| `relu + normal(0.01)` | $1.32 \times 10^{0}$ | 0.087 (random guessing) |
-| `relu + xavier` | $1.73 \times 10^{0}$ | 0.867 |
-| `relu + he` | $9.41 \times 10^{-1}$ ($\approx 1.0$) | **0.920** |
+
+| Configuration         | Gradient Ratio ($\text{grad}_{\text{layer1}} / \text{grad}_{\text{last}}$) | Final Validation Accuracy |
+| :-------------------- | :------------------------------------------------------------------------: | :-----------------------: |
+| `sigmoid + xavier`    |                           $1.05 \times 10^{-6}$                            |  0.107 (random guessing)  |
+| `relu + normal(0.01)` |                            $1.32 \times 10^{0}$                            |  0.087 (random guessing)  |
+| `relu + xavier`       |                            $1.73 \times 10^{0}$                            |           0.867           |
+| `relu + he`           |                   $9.41 \times 10^{-1}$ ($\approx 1.0$)                    |         **0.920**         |
 
 ### Detailed Analysis
+
 1. **`sigmoid + xavier` (Vanishing Gradients):**
    - The derivative of sigmoid satisfies $\sigma'(z) \le 0.25$. Across 10 layers, the backpropagated error is gated by $\prod_{\ell=1}^{10} \sigma'(z^{(\ell)}) \le 0.25^{10} \approx 9.54 \times 10^{-7}$.
    - The measured gradient norm ratio of $1.05 \times 10^{-6}$ directly matches this theoretical bound. The early layers receive effectively zero gradient update, preventing feature learning and leaving validation accuracy locked at $10.7\%$ (random chance for 10 classes).
@@ -37,6 +41,7 @@ This document contains detailed write-ups and ready-to-copy LaTeX blocks for **E
    - The gradient ratio remains remarkably stable across all 10 layers ($0.941 \approx 1.0$), achieving the highest validation accuracy ($92.0\%$).
 
 ### Ready-to-Copy LaTeX for Report (E1)
+
 ```latex
 In a 10-layer MLP, initialisation determines whether gradients survive to early layers:
 \texttt{sigmoid + xavier} suffers extreme vanishing gradients ($\text{grad ratio} = 1.05\times 10^{-6}$), closely matching the theoretical limit $(0.25)^{10} \approx 9.54\times 10^{-7}$ and remaining at random guessing (val acc 0.107).
@@ -50,10 +55,13 @@ Finally, \texttt{relu + he} balances variance throughout the deep network ($\tex
 ## E2: Optimisers (3 pts)
 
 ### Prompt
+
 > SGD, SGD+momentum, RMSprop, Adam and AdamW on the same model, data and seed. Compare validation-loss curves; say what differs and why one learning rate cannot rank optimisers. (3–5 sentences, citing your numbers).
 
 ### Your Experimental Results
+
 Final validation accuracy after 30 epochs ($\eta = 0.05$):
+
 - **SGD**: $0.947$
 - **SGD + Momentum**: $0.963$
 - **RMSprop**: **$0.973$**
@@ -61,6 +69,7 @@ Final validation accuracy after 30 epochs ($\eta = 0.05$):
 - **AdamW**: $0.960$
 
 ### Detailed Analysis
+
 1. **Convergence and Dynamics:**
    - Plain SGD converges slowest ($0.947$) due to oscillatory steps along high-curvature directions in the loss landscape.
    - Momentum accelerates convergence ($0.963$) by accumulating velocity along consistent gradient directions and dampening oscillations.
@@ -70,6 +79,7 @@ Final validation accuracy after 30 epochs ($\eta = 0.05$):
    - Conversely, non-adaptive SGD lacks gradient normalization and often requires substantially larger learning rates ($0.01$ to $0.1$) to escape flat regions. Ranking optimisers under a single learning rate tests hyperparameter sensitivity rather than true asymptotic capacity.
 
 ### Ready-to-Copy LaTeX for Report (E2)
+
 ```latex
 All five optimisers achieved strong validation accuracy on the digits task with learning rate $\eta=0.05$: RMSprop reached the highest validation accuracy (0.973), followed by Adam (0.963), SGD+momentum (0.963), AdamW (0.960), and plain SGD (0.947). Momentum and adaptive algorithms accelerated initial convergence noticeably over plain SGD by dampening cross-gradient oscillations. However, a single fixed learning rate cannot fairly rank optimisers because adaptive methods (Adam/RMSprop) scale updates by $1/\sqrt{v_t + \epsilon}$ (operating best with smaller nominal rates like $10^{-3}$), whereas SGD requires larger steps ($\sim 10^{-1}$ to $10^{-2}$) to traverse the loss landscape efficiently.
 ```
@@ -79,20 +89,23 @@ All five optimisers achieved strong validation accuracy on the digits task with 
 ## E3: Regularisation on Noisy Data (4 pts)
 
 ### Prompt
+
 > 300 training images with 25% corrupted labels so that overfitting is visible. Compare baseline, dropout, batch norm, weight decay, early stopping and a combination in a table and a plot; say what each mechanism does. (Include table and 3–5 sentences).
 
 ### Your Experimental Results Table
-| Configuration | Train Acc | Val Loss Min | Val Loss Last | Epochs | Test Acc |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| **Baseline** | $1.000$ | $0.739$ | $0.910$ | 100 | $0.809$ |
-| **Dropout (0.5)** | $0.860$ | $0.601$ | $0.672$ | 100 | $0.837$ |
-| **BatchNorm** | $1.000$ | $0.699$ | $0.838$ | 100 | $0.791$ |
-| **Weight Decay (0.5)** | $1.000$ | $0.723$ | $0.756$ | 100 | $0.807$ |
-| **Early Stopping (patience=8)** | $1.000$ | $0.750$ | $0.763$ | 19 | $0.791$ |
-| **Dropout + WD + Early** | $0.740$ | $0.663$ | $0.664$ | 46 | **$0.859$** |
-| **MixUp ($\alpha = 0.4$) [Bonus]** | $0.380$ | $0.680$ | $0.850$ | 100 | $0.757$ |
+
+| Configuration                      | Train Acc | Val Loss Min | Val Loss Last | Epochs |  Test Acc   |
+| :--------------------------------- | :-------: | :----------: | :-----------: | :----: | :---------: |
+| **Baseline**                       |  $1.000$  |   $0.739$    |    $0.910$    |  100   |   $0.809$   |
+| **Dropout (0.5)**                  |  $0.860$  |   $0.601$    |    $0.672$    |  100   |   $0.837$   |
+| **BatchNorm**                      |  $1.000$  |   $0.699$    |    $0.838$    |  100   |   $0.791$   |
+| **Weight Decay (0.5)**             |  $1.000$  |   $0.723$    |    $0.756$    |  100   |   $0.807$   |
+| **Early Stopping (patience=8)**    |  $1.000$  |   $0.750$    |    $0.763$    |   19   |   $0.791$   |
+| **Dropout + WD + Early**           |  $0.740$  |   $0.663$    |    $0.664$    |   46   | **$0.859$** |
+| **MixUp ($\alpha = 0.4$) [Bonus]** |  $0.380$  |   $0.680$    |    $0.850$    |  100   |   $0.757$   |
 
 ### Detailed Mechanism Breakdown
+
 1. **Baseline**: Perfectly memorises corrupted training labels ($1.000$ train acc), but validation loss climbs from $0.739$ to $0.910$, demonstrating severe overfitting (test acc $0.809$).
 2. **Dropout ($p=0.5$)**: Stochastically zeroes out hidden units during forward passes, breaking co-adaptation of features. This acts as an ensemble of thinned networks, dramatically reducing minimum validation loss to $0.601$ and improving test accuracy to $0.837$.
 3. **BatchNorm**: While providing internal normalization, its affine parameters ($\gamma, \beta$) give sufficient capacity to fit arbitrary label noise on small datasets without penalty, degrading test accuracy to $0.791$ (worse than baseline).
@@ -102,6 +115,7 @@ All five optimisers achieved strong validation accuracy on the digits task with 
 7. **MixUp ($\alpha=0.4$)**: Linearly interpolates feature-label pairs. With small data and high noise, it severely suppresses label memorization (train acc $0.380$), though on this small-sample setup it required longer training or lower $\alpha$ for optimal test performance.
 
 ### Ready-to-Copy LaTeX for Report (E3)
+
 ```latex
 \begin{center}
 \small
@@ -127,9 +141,11 @@ On 25\% noisy labels, the baseline overfits completely (train acc 1.000, test 0.
 ## E4: Final Model (4 pts)
 
 ### Prompt
-> Choose a configuration *using the validation set only*, train with warm-up + cosine and gradient clipping, and evaluate on the test set *once*. Target: test accuracy $\ge 0.95$. Save `figures/final_curves.png`. (3–5 sentences: configuration and why, final test accuracy, where errors occur).
+
+> Choose a configuration _using the validation set only_, train with warm-up + cosine and gradient clipping, and evaluate on the test set _once_. Target: test accuracy $\ge 0.95$. Save `figures/final_curves.png`. (3–5 sentences: configuration and why, final test accuracy, where errors occur).
 
 ### Final Results
+
 - **Final Test Loss**: **$0.1066$**
 - **Final Test Accuracy**: **$0.9799$ ($98.0\% \ge 95\%$)**
 - **Best Epoch**: 34
@@ -137,6 +153,7 @@ On 25\% noisy labels, the baseline overfits completely (train acc 1.000, test 0.
 - **Plot Saved**: [`figures/final_curves.png`](./figures/final_curves.png)
 
 ### Architecture & Hyperparameters
+
 - **Architecture**: 3-layer MLP: $64 \to 128 \to 64 \to 10$
 - **Hidden Activations**: ReLU with He initialization (`init_weights(..., "he")`)
 - **Normalization & Regularization**: `LayerNorm` after linear layers, mild Dropout ($p=0.15$)
@@ -145,6 +162,7 @@ On 25\% noisy labels, the baseline overfits completely (train acc 1.000, test 0.
 - **Gradient Clipping**: `clip_norm = 1.0` in `train_one_epoch`
 
 ### Ready-to-Copy LaTeX for Report (E4)
+
 ```latex
 Selected configuration: 3-layer MLP ($64 \to 128 \to 64 \to 10$) with ReLU activation, LayerNorm, and Dropout ($p=0.15$), optimised with AdamW ($\text{lr}=2\times 10^{-3}$, $\text{weight\_decay}=10^{-4}$), warm-up cosine schedule, and gradient clipping ($\text{clip\_norm}=1.0$). Hyperparameters were tuned strictly on validation accuracy (reaching 0.983). Evaluated on the test set exactly once, the final model achieved a test loss of \textbf{0.1066} and test accuracy of \textbf{0.9799} ($98.0\% \ge 95\%$, best epoch 34). The confusion analysis indicates misclassifications are concentrated on visually similar digits: digit 3 confused for 8 (4 times), digit 4 confused for 9 (1 time), and digit 1 confused for 4 (1 time).
 
@@ -153,3 +171,33 @@ Selected configuration: 3-layer MLP ($64 \to 128 \to 64 \to 10$) with ReLU activ
 \end{center}
 ```
 
+---
+
+## Optional Bonus: MyAdam & MixUp (up to +10 pts)
+
+### Prompt
+
+> Total capped at 100. In `src/bonus.py`: [+6] `MyAdam`, Adam with bias correction as a `torch.optim.Optimizer` subclass matching `torch.optim.Adam` to $10^{-6}$ (`tests/test_bonus.py`); [+4] `mixup_batch`, then train with it in the E3 setting and add a row to the table. (What you did and what you observed).
+
+### Detailed Breakdown
+
+1. **`MyAdam` (+6 pts)**:
+   - Implemented as a `torch.optim.Optimizer` subclass in `src/bonus.py`.
+   - Tracks first moment $m_t = \beta_1 m_{t-1} + (1-\beta_1)g_t$ and second raw moment $v_t = \beta_2 v_{t-1} + (1-\beta_2)g_t^2$.
+   - Applies step counter $t$ and exact analytical bias corrections: $\hat{m}_t = \frac{m_t}{1 - \beta_1^t}$ and $\hat{v}_t = \frac{v_t}{1 - \beta_2^t}$.
+   - Coupled $L_2$ weight decay and parameter update: $\theta \leftarrow \theta - \frac{\eta}{\sqrt{\hat{v}_t} + \epsilon} \hat{m}_t$.
+   - Verified against PyTorch's native `torch.optim.Adam` via `tests/test_bonus.py` with difference $< 10^{-6}$.
+
+2. **`mixup_batch` (+4 pts)**:
+   - Implemented input and one-hot target linear interpolation: $\tilde{x} = \lambda x + (1-\lambda) x_\pi$ and $\tilde{y} = \lambda y + (1-\lambda) y_\pi$, with $\lambda \sim \text{Beta}(\alpha, \alpha)$ and random permutation index $\pi$.
+   - Evaluated in E3 setting (300 digits, 25% label noise) with $\alpha = 0.4$:
+     - Results: Train Acc = 0.380, Val Loss Min = 0.680, Val Loss Last = 0.850, Epochs = 100, Test Acc = 0.757.
+     - Observation: MixUp heavily suppresses hard label memorisation by training on soft convex combinations, keeping training accuracy down at 0.380. On this tiny 300-example dataset with 25% noise, $\alpha = 0.4$ softens boundaries excessively within 100 epochs, indicating a smaller $\alpha \approx 0.1$ or a longer schedule would be optimal.
+
+### Ready-to-Copy LaTeX for Report (Optional Bonus)
+
+```latex
+\textbf{MyAdam (+6):} Implemented in \texttt{src/bonus.py} as a \texttt{torch.optim.Optimizer} subclass maintaining exponential moving averages $m_t, v_t$ with bias corrections $\hat{m}_t = m_t / (1 - \beta_1^t)$ and $\hat{v}_t = v_t / (1 - \beta_2^t)$, coupled $L_2$ weight decay, and step update $\theta \leftarrow \theta - \frac{\eta}{\sqrt{\hat{v}_t} + \epsilon}\hat{m}_t$. It passes \texttt{tests/test\_bonus.py}, matching PyTorch's native \texttt{torch.optim.Adam} to $< 10^{-6}$.
+
+\textbf{MixUp (+4):} Implemented $\tilde{\mathbf{x}} = \lambda \mathbf{x} + (1-\lambda)\mathbf{x}_\pi$ with $\lambda \sim \text{Beta}(\alpha, \alpha)$ in \texttt{bonus.py}. In the E3 noisy-label regime ($\alpha=0.4$), MixUp strongly prevented memorisation of corrupted labels, limiting training accuracy to 0.380 (val loss min 0.680, test acc 0.757); on this small sample size (300 images), aggressive label mixing softened boundaries, indicating a smaller $\alpha$ ($\approx 0.1$) is optimal.
+```

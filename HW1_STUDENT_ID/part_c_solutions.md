@@ -109,5 +109,4 @@ A surprising result in E3 was that Batch Normalisation performed worse than the 
 
 ---
 
-*(Note: Detailed solutions, analyses, and ready-to-copy LaTeX blocks for Part E experiments are organized separately in [`part_e_solutions.md`](./part_e_solutions.md)).*
-
+_(Note: Detailed solutions, analyses, and ready-to-copy LaTeX blocks for Part E experiments are organized separately in [`part_e_solutions.md`](./part_e_solutions.md))._
